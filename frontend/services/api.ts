@@ -2,11 +2,40 @@ import type { PatientBase, PatientResponse, PatientWithRecordsResponse, MedicalR
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5192';
 
+const STORAGE_KEY = 'eh_auth';
+
+function getToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed?.token ?? null;
+  } catch {
+    return null;
+  }
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const token = getToken();
+
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options?.headers,
+    },
     ...options,
   });
+
+  if (res.status === 401) {
+    // Token expired or missing — clear storage and redirect to login
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(STORAGE_KEY);
+      window.location.href = '/login';
+    }
+    throw new Error('Sesión expirada. Por favor inicie sesión nuevamente.');
+  }
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ message: 'Error inesperado.' }));
@@ -56,7 +85,7 @@ export const registrosApi = {
   create(patientId: number, data: MedicalRecordBase): Promise<{ medicalRecordId: number }> {
     return request(`/api/patients/${patientId}/records`, {
       method: 'POST',
-      body: JSON.stringify(data),
+      body:   JSON.stringify(data),
     });
   },
 

@@ -1,5 +1,6 @@
 ﻿using MedContracts.Control_Interface.Flujo;
 using MedContracts.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ExpedienteAPI.Controllers
@@ -8,6 +9,7 @@ namespace ExpedienteAPI.Controllers
     [Route("api/patients")]
     [Produces("application/json")]
     [Tags("Patients")]
+    [Authorize]
     public class PatientController : ControllerBase
     {
         private readonly IPatientFlujo _patientFlujo;
