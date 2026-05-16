@@ -1,4 +1,4 @@
-import type { PatientBase, PatientResponse, PatientWithRecordsResponse, MedicalRecordBase, MedicalRecordResponse } from '@/types/expediente';
+import type { PatientBase, PatientResponse, PatientWithRecordsResponse, MedicalRecordBase, MedicalRecordResponse, PaginatedResult } from '@/types/expediente';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5192';
 
@@ -18,12 +18,13 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const expedientesApi = {
-  list(search?: string, estado?: string): Promise<PatientResponse[]> {
+  list(search?: string, estado?: string, page = 1, pageSize = 20): Promise<PaginatedResult<PatientResponse>> {
     const params = new URLSearchParams();
     if (search) params.set('search', search);
     if (estado) params.set('estado', estado);
-    const qs = params.toString();
-    return request(`/api/patients${qs ? `?${qs}` : ''}`);
+    params.set('page', String(page));
+    params.set('pageSize', String(pageSize));
+    return request(`/api/patients?${params.toString()}`);
   },
 
   getById(id: number): Promise<PatientResponse> {

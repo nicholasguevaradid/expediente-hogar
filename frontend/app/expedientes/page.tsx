@@ -3,43 +3,48 @@
 import { Suspense, useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { expedientesApi } from '@/services/api';
-import type { PatientResponse } from '@/types/expediente';
+import type { PatientResponse, PaginatedResult } from '@/types/expediente';
 import { ESTADOS } from '@/types/expediente';
 import ExpedienteTable from '@/components/ExpedienteTable';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ErrorMessage from '@/components/ErrorMessage';
 import Toast from '@/components/Toast';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import Pagination from '@/components/Pagination';
 import { useToast } from '@/hooks/useToast';
+
+const PAGE_SIZE = 20;
 
 function ExpedientesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toasts, addToast, dismiss } = useToast();
 
-  const [expedientes, setExpedientes] = useState<PatientResponse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [confirmId, setConfirmId] = useState<number | null>(null);
-  const [deleting, setDeleting] = useState(false);
-
   const search = searchParams.get('search') ?? '';
   const estado = searchParams.get('estado') ?? '';
+  const page   = Number(searchParams.get('page') ?? '1');
+
   const [searchInput, setSearchInput] = useState(search);
   const [estadoInput, setEstadoInput] = useState(estado);
+
+  const [result, setResult]   = useState<PaginatedResult<PatientResponse> | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState<string | null>(null);
+  const [confirmId, setConfirmId]   = useState<number | null>(null);
+  const [deleting, setDeleting]     = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await expedientesApi.list(search || undefined, estado || undefined);
-      setExpedientes(data);
+      const data = await expedientesApi.list(search || undefined, estado || undefined, page, PAGE_SIZE);
+      setResult(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar expedientes.');
     } finally {
       setLoading(false);
     }
-  }, [search, estado]);
+  }, [search, estado, page]);
 
   useEffect(() => {
     setSearchInput(search);
@@ -53,6 +58,13 @@ function ExpedientesContent() {
     const params = new URLSearchParams();
     if (searchInput) params.set('search', searchInput);
     if (estadoInput) params.set('estado', estadoInput);
+    params.set('page', '1');
+    router.push(`/expedientes?${params.toString()}`);
+  }
+
+  function goToPage(p: number) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', String(p));
     router.push(`/expedientes?${params.toString()}`);
   }
 
@@ -61,8 +73,8 @@ function ExpedientesContent() {
     setDeleting(true);
     try {
       await expedientesApi.delete(confirmId);
-      setExpedientes((prev) => prev.filter((e) => e.patientId !== confirmId));
       addToast('Expediente eliminado correctamente.', 'success');
+      fetchData();
     } catch (err) {
       addToast(err instanceof Error ? err.message : 'No se pudo eliminar el expediente.', 'error');
     } finally {
@@ -77,15 +89,13 @@ function ExpedientesContent() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Expedientes</h1>
-            {!loading && (
+            {result && (
               <p className="text-gray-500 text-sm mt-1">
-                {expedientes.length} resultado{expedientes.length !== 1 ? 's' : ''}
+                {result.total} resultado{result.total !== 1 ? 's' : ''}
               </p>
             )}
           </div>
-          <a href="/expedientes/nuevo" className="btn-primary">
-            + Nuevo expediente
-          </a>
+          <a href="/expedientes/nuevo" className="btn-primary">+ Nuevo expediente</a>
         </div>
 
         <form onSubmit={applyFilters} className="card flex flex-col sm:flex-row gap-3">
@@ -111,12 +121,22 @@ function ExpedientesContent() {
 
         {loading && <LoadingSpinner />}
         {error && <ErrorMessage message={error} onRetry={fetchData} />}
-        {!loading && !error && (
-          <ExpedienteTable
-            expedientes={expedientes}
-            onDelete={setConfirmId}
-            deleting={confirmId}
-          />
+
+        {!loading && !error && result && (
+          <>
+            <ExpedienteTable
+              expedientes={result.data}
+              onDelete={setConfirmId}
+              deleting={confirmId}
+            />
+            <Pagination
+              page={result.page}
+              totalPages={result.totalPages}
+              total={result.total}
+              pageSize={result.pageSize}
+              onPageChange={goToPage}
+            />
+          </>
         )}
       </div>
 

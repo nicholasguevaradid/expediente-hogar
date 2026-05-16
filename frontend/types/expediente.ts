@@ -58,3 +58,11 @@ export interface ApiError {
 
 export const ESTADOS = ['Activo', 'Inactivo', 'Cerrado', 'Pendiente'] as const;
 export type Estado = (typeof ESTADOS)[number];
+
+export interface PaginatedResult<T> {
+  data: T[];
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}

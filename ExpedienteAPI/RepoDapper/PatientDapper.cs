@@ -100,15 +100,24 @@ namespace RepoDapper
             return patient;
         }
 
-        public async Task<IEnumerable<PatientResponse>> ListPatients(string? search = null, string? estado = null)
+        public async Task<PaginatedResult<PatientResponse>> ListPatients(string? search = null, string? estado = null, int page = 1, int pageSize = 20)
         {
-            var patients = await _sqlconnection.QueryAsync<PatientResponse>(
+            using var multi = await _sqlconnection.QueryMultipleAsync(
                 "dbo.ListPatients",
-                new { Search = search, Estado = estado },
+                new { Search = search, Estado = estado, Page = page, PageSize = pageSize },
                 commandType: CommandType.StoredProcedure
             );
 
-            return patients;
+            var total = await multi.ReadFirstAsync<int>();
+            var data  = (await multi.ReadAsync<PatientResponse>()).ToList();
+
+            return new PaginatedResult<PatientResponse>
+            {
+                Data     = data,
+                Page     = page,
+                PageSize = pageSize,
+                Total    = total
+            };
         }
 
         public async Task<PatientWithRecordsResponse?> GetPatientWithRecords(int patientId)

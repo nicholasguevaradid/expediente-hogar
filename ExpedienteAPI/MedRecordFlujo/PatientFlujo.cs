@@ -13,8 +13,8 @@ namespace MedRecordFlujo
             _patientDapper = patientDapper;
         }
 
-        public Task<IEnumerable<PatientResponse>> ListPatients(string? search = null, string? estado = null)
-            => _patientDapper.ListPatients(search, estado);
+        public Task<PaginatedResult<PatientResponse>> ListPatients(string? search = null, string? estado = null, int page = 1, int pageSize = 20)
+            => _patientDapper.ListPatients(search, estado, page, pageSize);
 
         public Task<PatientResponse?> GetPatientById(int patientId)
             => _patientDapper.GetPatientById(patientId);

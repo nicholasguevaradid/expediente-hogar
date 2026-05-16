@@ -4,7 +4,7 @@ namespace MedContracts.Control_Interface.Flujo
 {
     public interface IPatientFlujo
     {
-        Task<IEnumerable<PatientResponse>> ListPatients(string? search = null, string? estado = null);
+        Task<PaginatedResult<PatientResponse>> ListPatients(string? search = null, string? estado = null, int page = 1, int pageSize = 20);
         Task<PatientResponse?> GetPatientById(int patientId);
         Task<PatientWithRecordsResponse?> GetPatientWithRecords(int patientId);
 

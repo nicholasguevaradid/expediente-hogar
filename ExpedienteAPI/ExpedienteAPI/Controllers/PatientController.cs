@@ -17,14 +17,20 @@ namespace ExpedienteAPI.Controllers
             _patientFlujo = patientFlujo;
         }
 
-        // GET: /api/patients?search=ana&estado=Activo
+        // GET: /api/patients?search=ana&estado=Activo&page=1&pageSize=20
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<PatientResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<PatientResponse>>> List(
-            [FromQuery] string? search = null,
-            [FromQuery] string? estado = null)
+        [ProducesResponseType(typeof(PaginatedResult<PatientResponse>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<PaginatedResult<PatientResponse>>> List(
+            [FromQuery] string? search   = null,
+            [FromQuery] string? estado   = null,
+            [FromQuery] int     page     = 1,
+            [FromQuery] int     pageSize = 20)
         {
-            var result = await _patientFlujo.ListPatients(search, estado);
+            if (page < 1)     page     = 1;
+            if (pageSize < 1) pageSize = 1;
+            if (pageSize > 100) pageSize = 100;
+
+            var result = await _patientFlujo.ListPatients(search, estado, page, pageSize);
             return Ok(result);
         }
 
