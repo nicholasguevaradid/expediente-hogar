@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { expedientesApi } from '@/services/api';
-import type { PatientWithRecordsResponse } from '@/types/expediente';
+import { expedientesApi, registrosApi } from '@/services/api';
+import type { PatientWithRecordsResponse, MedicalRecordResponse } from '@/types/expediente';
 import StatusBadge from '@/components/StatusBadge';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ErrorMessage from '@/components/ErrorMessage';
@@ -21,6 +21,56 @@ function Field({ label, value }: { label: string; value?: string | null }) {
   );
 }
 
+interface RecordCardProps {
+  rec: MedicalRecordResponse;
+  patientId: string;
+  onDelete: (id: number) => void;
+  deleting: boolean;
+}
+
+function RecordCard({ rec, patientId, onDelete, deleting }: RecordCardProps) {
+  return (
+    <div className="card space-y-3">
+      <div className="flex justify-between items-start">
+        <p className="font-medium text-sm text-blue-700">
+          Visita: {rec.visitDate?.split('T')[0]}
+        </p>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-gray-400">#{rec.medicalRecordId}</span>
+          <a
+            href={`/expedientes/${patientId}/registros/${rec.medicalRecordId}/editar`}
+            className="text-amber-600 hover:underline text-xs font-medium"
+          >
+            Editar
+          </a>
+          <button
+            onClick={() => onDelete(rec.medicalRecordId)}
+            disabled={deleting}
+            className="text-red-600 hover:underline text-xs font-medium disabled:opacity-40"
+          >
+            {deleting ? '...' : 'Eliminar'}
+          </button>
+        </div>
+      </div>
+      <dl className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <Field label="Diagnóstico" value={rec.diagnosis} />
+        <Field label="Diagnóstico histórico" value={rec.hist_Diagnosis} />
+        <Field label="Alergias" value={rec.alergies} />
+        <Field label="Prescripción" value={rec.perscrption} />
+        <Field label="Presión arterial" value={rec.bloodPressure} />
+        <Field label="Temperatura (°C)" value={rec.temperatureC?.toString()} />
+        <Field label="Peso (kg)" value={rec.weightKg?.toString()} />
+        <Field label="Altura (cm)" value={rec.heightCm?.toString()} />
+      </dl>
+      {rec.notes && (
+        <div className="text-sm text-gray-700 bg-gray-50 rounded p-3">
+          <span className="font-medium">Notas: </span>{rec.notes}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function DetalleExpedientePage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -29,10 +79,17 @@ export default function DetalleExpedientePage() {
   const [data, setData] = useState<PatientWithRecordsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
+  // Confirm para eliminar expediente
+  const [showExpConfirm, setShowExpConfirm] = useState(false);
+  const [deletingExp, setDeletingExp] = useState(false);
+
+  // Confirm para eliminar registro médico
+  const [confirmRecordId, setConfirmRecordId] = useState<number | null>(null);
+  const [deletingRecord, setDeletingRecord] = useState(false);
+
+  const load = useCallback(() => {
+    setLoading(true);
     expedientesApi
       .getWithRecords(Number(id))
       .then(setData)
@@ -40,15 +97,36 @@ export default function DetalleExpedientePage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  async function handleDelete() {
-    setDeleting(true);
+  useEffect(() => { load(); }, [load]);
+
+  async function handleDeleteExpediente() {
+    setDeletingExp(true);
     try {
       await expedientesApi.delete(Number(id));
       router.push('/expedientes');
     } catch (err) {
       addToast(err instanceof Error ? err.message : 'No se pudo eliminar el expediente.', 'error');
-      setDeleting(false);
-      setShowConfirm(false);
+      setDeletingExp(false);
+      setShowExpConfirm(false);
+    }
+  }
+
+  async function handleDeleteRecord() {
+    if (confirmRecordId === null) return;
+    setDeletingRecord(true);
+    try {
+      await registrosApi.delete(confirmRecordId);
+      setData((prev) =>
+        prev
+          ? { ...prev, records: prev.records.filter((r) => r.medicalRecordId !== confirmRecordId) }
+          : prev
+      );
+      addToast('Registro médico eliminado.', 'success');
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : 'No se pudo eliminar el registro.', 'error');
+    } finally {
+      setDeletingRecord(false);
+      setConfirmRecordId(null);
     }
   }
 
@@ -80,7 +158,7 @@ export default function DetalleExpedientePage() {
           </div>
           <div className="flex gap-2">
             <a href={`/expedientes/${id}/editar`} className="btn-secondary">Editar</a>
-            <button onClick={() => setShowConfirm(true)} className="btn-danger">Eliminar</button>
+            <button onClick={() => setShowExpConfirm(true)} className="btn-danger">Eliminar</button>
           </div>
         </div>
 
@@ -134,41 +212,34 @@ export default function DetalleExpedientePage() {
           ) : (
             <div className="space-y-3">
               {records.map((rec) => (
-                <div key={rec.medicalRecordId} className="card space-y-3">
-                  <div className="flex justify-between items-start">
-                    <p className="font-medium text-sm text-blue-700">
-                      Visita: {rec.visitDate?.split('T')[0]}
-                    </p>
-                    <span className="text-xs text-gray-400">#{rec.medicalRecordId}</span>
-                  </div>
-                  <dl className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    <Field label="Diagnóstico" value={rec.diagnosis} />
-                    <Field label="Diagnóstico histórico" value={rec.hist_Diagnosis} />
-                    <Field label="Alergias" value={rec.alergies} />
-                    <Field label="Prescripción" value={rec.perscrption} />
-                    <Field label="Presión arterial" value={rec.bloodPressure} />
-                    <Field label="Temperatura (°C)" value={rec.temperatureC?.toString()} />
-                    <Field label="Peso (kg)" value={rec.weightKg?.toString()} />
-                    <Field label="Altura (cm)" value={rec.heightCm?.toString()} />
-                  </dl>
-                  {rec.notes && (
-                    <div className="text-sm text-gray-700 bg-gray-50 rounded p-3">
-                      <span className="font-medium">Notas: </span>{rec.notes}
-                    </div>
-                  )}
-                </div>
+                <RecordCard
+                  key={rec.medicalRecordId}
+                  rec={rec}
+                  patientId={id}
+                  onDelete={setConfirmRecordId}
+                  deleting={deletingRecord && confirmRecordId === rec.medicalRecordId}
+                />
               ))}
             </div>
           )}
         </div>
       </div>
 
-      {showConfirm && (
+      {showExpConfirm && (
         <ConfirmDialog
-          message="¿Eliminar este expediente? Esta acción no se puede deshacer."
-          onConfirm={handleDelete}
-          onCancel={() => setShowConfirm(false)}
-          loading={deleting}
+          message="¿Eliminar este expediente y todos sus registros? Esta acción no se puede deshacer."
+          onConfirm={handleDeleteExpediente}
+          onCancel={() => setShowExpConfirm(false)}
+          loading={deletingExp}
+        />
+      )}
+
+      {confirmRecordId !== null && (
+        <ConfirmDialog
+          message="¿Eliminar este registro médico? Esta acción no se puede deshacer."
+          onConfirm={handleDeleteRecord}
+          onCancel={() => setConfirmRecordId(null)}
+          loading={deletingRecord}
         />
       )}
 
