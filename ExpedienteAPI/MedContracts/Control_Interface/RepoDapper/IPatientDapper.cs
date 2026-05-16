@@ -12,6 +12,7 @@ namespace MedContracts.Control_Interface.RepoDapper
         Task<int> DeletePatient(int patientId);
 
         Task<PatientWithRecordsResponse?> GetPatientWithRecords(int patientId);
+        Task<IEnumerable<PatientResponse>> ExportPatients(string? search, string? estado);
         Task<StatsResponse> GetStats();
     }
 }

@@ -11,6 +11,7 @@ namespace MedContracts.Control_Interface.Flujo
         Task<int> CreatePatient(PatientBase patient);
         Task<int> UpdatePatient(int patientId, PatientBase patient);
         Task<int> DeletePatient(int patientId);
+        Task<IEnumerable<PatientResponse>> ExportPatients(string? search, string? estado);
         Task<StatsResponse> GetStats();
     }
 }

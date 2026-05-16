@@ -140,6 +140,17 @@ namespace RepoDapper
             };
         }
 
+        public async Task<IEnumerable<PatientResponse>> ExportPatients(string? search, string? estado)
+        {
+            using var multi = await _sqlconnection.QueryMultipleAsync(
+                "dbo.ListPatients",
+                new { Search = search, Estado = estado, Page = 1, PageSize = 99999 },
+                commandType: CommandType.StoredProcedure
+            );
+            await multi.ReadFirstAsync<int>(); // skip total count
+            return (await multi.ReadAsync<PatientResponse>()).ToList();
+        }
+
         public async Task<StatsResponse> GetStats()
         {
             using var multi = await _sqlconnection.QueryMultipleAsync(

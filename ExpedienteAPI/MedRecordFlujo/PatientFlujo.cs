@@ -31,6 +31,9 @@ namespace MedRecordFlujo
         public Task<int> DeletePatient(int patientId)
             => _patientDapper.DeletePatient(patientId);
 
+        public Task<IEnumerable<PatientResponse>> ExportPatients(string? search, string? estado)
+            => _patientDapper.ExportPatients(search, estado);
+
         public Task<StatsResponse> GetStats()
             => _patientDapper.GetStats();
     }

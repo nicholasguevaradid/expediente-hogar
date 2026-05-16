@@ -1,4 +1,5 @@
 using MedContracts.Control_Interface.Flujo;
+using QuestPDF.Infrastructure;
 using MedContracts.Control_Interface.RepoDapper;
 using MedRecordFlujo;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -9,6 +10,8 @@ using RepoDapper;
 using RepoDapper.Repositorios;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using System.Text;
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 var builder = WebApplication.CreateBuilder(args);
 

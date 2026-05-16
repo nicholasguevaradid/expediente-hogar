@@ -13,13 +13,15 @@ import ConfirmDialog from '@/components/ConfirmDialog';
 import Pagination from '@/components/Pagination';
 import { useToast } from '@/hooks/useToast';
 import { useIsAdmin } from '@/hooks/useRole';
+import { exportExcel } from '@/services/export';
 
 const PAGE_SIZE = 20;
 
 function ExpedientesContent() {
   const searchParams = useSearchParams();
-  const router  = useRouter();
-  const isAdmin = useIsAdmin();
+  const router     = useRouter();
+  const isAdmin    = useIsAdmin();
+  const [exporting, setExporting] = useState(false);
   const { toasts, addToast, dismiss } = useToast();
 
   const search = searchParams.get('search') ?? '';
@@ -97,9 +99,23 @@ function ExpedientesContent() {
               </p>
             )}
           </div>
-          {isAdmin && (
-            <a href="/expedientes/nuevo" className="btn-primary">+ Nuevo expediente</a>
-          )}
+          <div className="flex gap-2">
+            <button
+              onClick={async () => {
+                setExporting(true);
+                try { await exportExcel(search || undefined, estado || undefined); }
+                catch { addToast('No se pudo generar el Excel.', 'error'); }
+                finally { setExporting(false); }
+              }}
+              disabled={exporting}
+              className="btn-secondary disabled:opacity-60"
+            >
+              {exporting ? 'Generando…' : 'Exportar Excel'}
+            </button>
+            {isAdmin && (
+              <a href="/expedientes/nuevo" className="btn-primary">+ Nuevo expediente</a>
+            )}
+          </div>
         </div>
 
         <form onSubmit={applyFilters} className="card flex flex-col sm:flex-row gap-3">

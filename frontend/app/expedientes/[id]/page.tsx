@@ -11,6 +11,7 @@ import ConfirmDialog from '@/components/ConfirmDialog';
 import Toast from '@/components/Toast';
 import { useToast } from '@/hooks/useToast';
 import { useIsAdmin } from '@/hooks/useRole';
+import { exportPdf } from '@/services/export';
 
 function Field({ label, value }: { label: string; value?: string | null }) {
   if (!value) return null;
@@ -79,8 +80,9 @@ function RecordCard({ rec, patientId, onDelete, deleting, isAdmin }: RecordCardP
 
 export default function DetalleExpedientePage() {
   const { id } = useParams<{ id: string }>();
-  const router  = useRouter();
-  const isAdmin = useIsAdmin();
+  const router     = useRouter();
+  const isAdmin    = useIsAdmin();
+  const [exporting, setExporting] = useState(false);
   const { toasts, addToast, dismiss } = useToast();
 
   const [data, setData] = useState<PatientWithRecordsResponse | null>(null);
@@ -163,12 +165,26 @@ export default function DetalleExpedientePage() {
               <StatusBadge estado={patient.estado} />
             </div>
           </div>
-          {isAdmin && (
-            <div className="flex gap-2">
-              <a href={`/expedientes/${id}/editar`} className="btn-secondary">Editar</a>
-              <button onClick={() => setShowExpConfirm(true)} className="btn-danger">Eliminar</button>
-            </div>
-          )}
+          <div className="flex gap-2">
+            <button
+              onClick={async () => {
+                setExporting(true);
+                try { await exportPdf(Number(id), data?.patient.numeroExpediente); }
+                catch { addToast('No se pudo generar el PDF.', 'error'); }
+                finally { setExporting(false); }
+              }}
+              disabled={exporting}
+              className="btn-secondary disabled:opacity-60"
+            >
+              {exporting ? 'Generando…' : 'Exportar PDF'}
+            </button>
+            {isAdmin && (
+              <>
+                <a href={`/expedientes/${id}/editar`} className="btn-secondary">Editar</a>
+                <button onClick={() => setShowExpConfirm(true)} className="btn-danger">Eliminar</button>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Datos personales */}
