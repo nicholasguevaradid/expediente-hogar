@@ -24,7 +24,7 @@ namespace ExpedienteAPI.Controllers
         public async Task<ActionResult<MedicalRecordResponse>> GetById([FromRoute] int medicalRecordId)
         {
             var record = await _recordFlujo.GetMedicalRecordById(medicalRecordId);
-            if (record is null) return NotFound(new { message = "Expediente médico no encontrado." });
+            if (record is null) return NotFound(ApiError(404, "Registro médico no encontrado."));
 
             return Ok(record);
         }
@@ -47,16 +47,21 @@ namespace ExpedienteAPI.Controllers
         {
             if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
-            // Asegura que el record quede ligado al paciente de la ruta
             request.PatientId = patientId;
 
-            var newId = await _recordFlujo.CreateMedicalRecord(request);
-
-            return CreatedAtAction(
-                nameof(GetById),
-                new { medicalRecordId = newId },
-                new { medicalRecordId = newId }
-            );
+            try
+            {
+                var newId = await _recordFlujo.CreateMedicalRecord(request);
+                return CreatedAtAction(
+                    nameof(GetById),
+                    new { medicalRecordId = newId },
+                    new { medicalRecordId = newId }
+                );
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiError(400, ex.Message));
+            }
         }
 
         // PUT: /api/records/5
@@ -72,13 +77,13 @@ namespace ExpedienteAPI.Controllers
             try
             {
                 var rows = await _recordFlujo.UpdateMedicalRecord(medicalRecordId, request);
-                if (rows <= 0) return NotFound(new { message = "Expediente médico no encontrado." });
+                if (rows <= 0) return NotFound(ApiError(404, "Registro médico no encontrado."));
 
                 return Ok(new { updated = rows });
             }
             catch (Exception ex)
             {
-                return NotFound(new { message = ex.Message });
+                return BadRequest(ApiError(400, ex.Message));
             }
         }
 
@@ -91,14 +96,21 @@ namespace ExpedienteAPI.Controllers
             try
             {
                 var rows = await _recordFlujo.DeleteMedicalRecord(medicalRecordId);
-                if (rows <= 0) return NotFound(new { message = "Expediente médico no encontrado." });
+                if (rows <= 0) return NotFound(ApiError(404, "Registro médico no encontrado."));
 
                 return Ok(new { deleted = rows });
             }
             catch (Exception ex)
             {
-                return NotFound(new { message = ex.Message });
+                return StatusCode(500, ApiError(500, ex.Message));
             }
         }
+
+        private static object ApiError(int status, string message) => new
+        {
+            message,
+            status,
+            timestamp = DateTime.UtcNow
+        };
     }
 }

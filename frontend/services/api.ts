@@ -1,4 +1,4 @@
-import type { PatientBase, PatientResponse, PatientWithRecordsResponse } from '@/types/expediente';
+import type { PatientBase, PatientResponse, PatientWithRecordsResponse, MedicalRecordBase, MedicalRecordResponse } from '@/types/expediente';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5192';
 
@@ -44,5 +44,26 @@ export const expedientesApi = {
 
   delete(id: number): Promise<{ deleted: number }> {
     return request(`/api/patients/${id}`, { method: 'DELETE' });
+  },
+};
+
+export const registrosApi = {
+  getById(recordId: number): Promise<MedicalRecordResponse> {
+    return request(`/api/records/${recordId}`);
+  },
+
+  create(patientId: number, data: MedicalRecordBase): Promise<{ medicalRecordId: number }> {
+    return request(`/api/patients/${patientId}/records`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  update(recordId: number, data: MedicalRecordBase): Promise<{ updated: number }> {
+    return request(`/api/records/${recordId}`, { method: 'PUT', body: JSON.stringify(data) });
+  },
+
+  delete(recordId: number): Promise<{ deleted: number }> {
+    return request(`/api/records/${recordId}`, { method: 'DELETE' });
   },
 };

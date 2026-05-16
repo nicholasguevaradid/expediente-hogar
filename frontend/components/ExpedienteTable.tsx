@@ -53,10 +53,7 @@ export default function ExpedienteTable({ expedientes, onDelete, deleting }: Pro
               <td className="px-4 py-3">
                 <StatusBadge estado={exp.estado} />
               </td>
-              <td
-                className="px-4 py-3"
-                onClick={(e) => e.stopPropagation()}
-              >
+              <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                 <div className="flex gap-2">
                   <button
                     onClick={() => router.push(`/expedientes/${exp.patientId}`)}
