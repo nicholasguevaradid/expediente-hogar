@@ -46,6 +46,30 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
+export interface StatsResponse {
+  totalPatients: number;
+  totalActivo: number;
+  totalInactivo: number;
+  totalCerrado: number;
+  totalPendiente: number;
+  nuevosHoy: number;
+  totalRecords: number;
+  recentPatients: {
+    patientId: number;
+    numeroExpediente: string | null;
+    firstName: string;
+    lastName: string;
+    estado: string;
+    createdAt: string;
+  }[];
+}
+
+export const statsApi = {
+  get(): Promise<StatsResponse> {
+    return request('/api/stats');
+  },
+};
+
 export const expedientesApi = {
   list(search?: string, estado?: string, page = 1, pageSize = 20): Promise<PaginatedResult<PatientResponse>> {
     const params = new URLSearchParams();

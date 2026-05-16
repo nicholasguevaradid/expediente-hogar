@@ -1,0 +1,30 @@
+-- Migration 003: GetStats stored procedure
+IF OBJECT_ID('dbo.GetStats', 'P') IS NOT NULL DROP PROCEDURE dbo.GetStats;
+GO
+CREATE PROCEDURE [dbo].[GetStats]
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        COUNT(*)                                                                               AS TotalPatients,
+        SUM(CASE WHEN Estado = 'Activo'    THEN 1 ELSE 0 END)                                 AS TotalActivo,
+        SUM(CASE WHEN Estado = 'Inactivo'  THEN 1 ELSE 0 END)                                 AS TotalInactivo,
+        SUM(CASE WHEN Estado = 'Cerrado'   THEN 1 ELSE 0 END)                                 AS TotalCerrado,
+        SUM(CASE WHEN Estado = 'Pendiente' THEN 1 ELSE 0 END)                                 AS TotalPendiente,
+        SUM(CASE WHEN CAST(CreatedAt AS DATE) = CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END)    AS NuevosHoy
+    FROM dbo.Patients;
+
+    SELECT COUNT(*) AS TotalRecords FROM dbo.MedicalRecords;
+
+    SELECT TOP 5
+        PatientId,
+        NumeroExpediente,
+        FirstName,
+        LastName,
+        Estado,
+        CreatedAt
+    FROM dbo.Patients
+    ORDER BY CreatedAt DESC;
+END
+GO

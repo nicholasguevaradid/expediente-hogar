@@ -140,6 +140,22 @@ namespace RepoDapper
             };
         }
 
+        public async Task<StatsResponse> GetStats()
+        {
+            using var multi = await _sqlconnection.QueryMultipleAsync(
+                "dbo.GetStats",
+                commandType: CommandType.StoredProcedure
+            );
+
+            var totals  = await multi.ReadFirstAsync<StatsResponse>();
+            var records = await multi.ReadFirstAsync<int>();
+            var recent  = (await multi.ReadAsync<RecentPatient>()).ToList();
+
+            totals.TotalRecords    = records;
+            totals.RecentPatients  = recent;
+            return totals;
+        }
+
         private async Task EnsurePatientExists(int patientId)
         {
             var existing = await GetPatientById(patientId);

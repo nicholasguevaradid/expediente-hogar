@@ -12,5 +12,6 @@ namespace MedContracts.Control_Interface.RepoDapper
         Task<int> DeletePatient(int patientId);
 
         Task<PatientWithRecordsResponse?> GetPatientWithRecords(int patientId);
+        Task<StatsResponse> GetStats();
     }
 }
