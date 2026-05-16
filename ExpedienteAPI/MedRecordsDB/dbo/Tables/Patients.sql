@@ -1,0 +1,25 @@
+﻿CREATE TABLE [dbo].[Patients] (
+    [PatientId]          INT            IDENTITY (1, 1) NOT NULL,
+    [NumeroExpediente]   VARCHAR (30)   NULL,
+    [Identificacion]     VARCHAR (30)   NULL,
+    [FirstName]          VARCHAR (60)   NOT NULL,
+    [LastName]           VARCHAR (60)   NOT NULL,
+    [SecLastName]        VARCHAR (60)   NULL,
+    [Birth_Date]         DATE           NULL,
+    [Gender]             VARCHAR (1)    NULL,
+    [PhoneNum]           VARCHAR (25)   NULL,
+    [EmergencyNum]       VARCHAR (25)   NULL,
+    [EmergencyName]      VARCHAR (120)  NULL,
+    [Email]              VARCHAR (120)  NULL,
+    [AddressLine1]       VARCHAR (120)  NULL,
+    [AddressLine2]       VARCHAR (120)  NULL,
+    [Canton]             VARCHAR (80)   NULL,
+    [TipoCasa]           VARCHAR (80)   NULL,
+    [Estado]             VARCHAR (20)   CONSTRAINT [DF_Patients_Estado] DEFAULT ('Activo') NOT NULL,
+    [Observaciones]      NVARCHAR (MAX) NULL,
+    [CreatedAt]          DATETIME2 (0)  CONSTRAINT [DF_Patients_CreatedAt] DEFAULT (sysdatetime()) NOT NULL,
+    [UpdatedAt]          DATETIME2 (0)  CONSTRAINT [DF_Patients_UpdatedAt] DEFAULT (sysdatetime()) NOT NULL,
+    PRIMARY KEY CLUSTERED ([PatientId] ASC),
+    CONSTRAINT [UQ_Patients_NumeroExpediente] UNIQUE ([NumeroExpediente])
+);
+

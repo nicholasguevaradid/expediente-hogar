@@ -1,0 +1,10 @@
+<Solution>
+  <Project Path="ExpedienteAPI/ExpedienteAPI.csproj" />
+  <Project Path="MedContracts/MedContracts.csproj" />
+  <Project Path="MedRecordFlujo/MedRecordFlujo.csproj" />
+  <Project Path="MedRecordsDB/MedRecordsDB.sqlproj" Id="78fbb23f-d741-45a0-a0f3-b3fd056e2fdb">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="RepoDapper/RepoDapper.csproj" />
+</Solution>
