@@ -77,6 +77,32 @@ export const expedientesApi = {
   },
 };
 
+export interface UserListItem {
+  userId: number;
+  username: string;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export const usersApi = {
+  list(): Promise<UserListItem[]> {
+    return request('/api/users');
+  },
+
+  create(data: { username: string; password: string; role: string }): Promise<{ userId: number }> {
+    return request('/api/users', { method: 'POST', body: JSON.stringify(data) });
+  },
+
+  update(userId: number, data: { role: string; isActive: boolean }): Promise<{ updated: number }> {
+    return request(`/api/users/${userId}`, { method: 'PUT', body: JSON.stringify(data) });
+  },
+
+  changePassword(userId: number, newPassword: string): Promise<{ updated: number }> {
+    return request(`/api/users/${userId}/password`, { method: 'PUT', body: JSON.stringify({ newPassword }) });
+  },
+};
+
 export const registrosApi = {
   getById(recordId: number): Promise<MedicalRecordResponse> {
     return request(`/api/records/${recordId}`);

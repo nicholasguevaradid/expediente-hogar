@@ -10,6 +10,7 @@ import ErrorMessage from '@/components/ErrorMessage';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import Toast from '@/components/Toast';
 import { useToast } from '@/hooks/useToast';
+import { useIsAdmin } from '@/hooks/useRole';
 
 function Field({ label, value }: { label: string; value?: string | null }) {
   if (!value) return null;
@@ -26,9 +27,10 @@ interface RecordCardProps {
   patientId: string;
   onDelete: (id: number) => void;
   deleting: boolean;
+  isAdmin: boolean;
 }
 
-function RecordCard({ rec, patientId, onDelete, deleting }: RecordCardProps) {
+function RecordCard({ rec, patientId, onDelete, deleting, isAdmin }: RecordCardProps) {
   return (
     <div className="card space-y-3">
       <div className="flex justify-between items-start">
@@ -37,19 +39,23 @@ function RecordCard({ rec, patientId, onDelete, deleting }: RecordCardProps) {
         </p>
         <div className="flex items-center gap-3">
           <span className="text-xs text-gray-400">#{rec.medicalRecordId}</span>
-          <a
-            href={`/expedientes/${patientId}/registros/${rec.medicalRecordId}/editar`}
-            className="text-amber-600 hover:underline text-xs font-medium"
-          >
-            Editar
-          </a>
-          <button
-            onClick={() => onDelete(rec.medicalRecordId)}
-            disabled={deleting}
-            className="text-red-600 hover:underline text-xs font-medium disabled:opacity-40"
-          >
-            {deleting ? '...' : 'Eliminar'}
-          </button>
+          {isAdmin && (
+            <>
+              <a
+                href={`/expedientes/${patientId}/registros/${rec.medicalRecordId}/editar`}
+                className="text-amber-600 hover:underline text-xs font-medium"
+              >
+                Editar
+              </a>
+              <button
+                onClick={() => onDelete(rec.medicalRecordId)}
+                disabled={deleting}
+                className="text-red-600 hover:underline text-xs font-medium disabled:opacity-40"
+              >
+                {deleting ? '...' : 'Eliminar'}
+              </button>
+            </>
+          )}
         </div>
       </div>
       <dl className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -73,7 +79,8 @@ function RecordCard({ rec, patientId, onDelete, deleting }: RecordCardProps) {
 
 export default function DetalleExpedientePage() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
+  const router  = useRouter();
+  const isAdmin = useIsAdmin();
   const { toasts, addToast, dismiss } = useToast();
 
   const [data, setData] = useState<PatientWithRecordsResponse | null>(null);
@@ -156,10 +163,12 @@ export default function DetalleExpedientePage() {
               <StatusBadge estado={patient.estado} />
             </div>
           </div>
-          <div className="flex gap-2">
-            <a href={`/expedientes/${id}/editar`} className="btn-secondary">Editar</a>
-            <button onClick={() => setShowExpConfirm(true)} className="btn-danger">Eliminar</button>
-          </div>
+          {isAdmin && (
+            <div className="flex gap-2">
+              <a href={`/expedientes/${id}/editar`} className="btn-secondary">Editar</a>
+              <button onClick={() => setShowExpConfirm(true)} className="btn-danger">Eliminar</button>
+            </div>
+          )}
         </div>
 
         {/* Datos personales */}
@@ -201,9 +210,11 @@ export default function DetalleExpedientePage() {
             <h2 className="text-lg font-semibold text-gray-900">
               Registros médicos ({records.length})
             </h2>
-            <a href={`/expedientes/${id}/registros/nuevo`} className="btn-primary text-sm">
-              + Agregar registro
-            </a>
+            {isAdmin && (
+              <a href={`/expedientes/${id}/registros/nuevo`} className="btn-primary text-sm">
+                + Agregar registro
+              </a>
+            )}
           </div>
           {records.length === 0 ? (
             <div className="card text-center text-gray-400 py-10">
@@ -218,6 +229,7 @@ export default function DetalleExpedientePage() {
                   patientId={id}
                   onDelete={setConfirmRecordId}
                   deleting={deletingRecord && confirmRecordId === rec.medicalRecordId}
+                  isAdmin={isAdmin}
                 />
               ))}
             </div>

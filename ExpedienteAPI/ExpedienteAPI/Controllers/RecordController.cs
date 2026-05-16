@@ -42,6 +42,7 @@ namespace ExpedienteAPI.Controllers
 
         // POST: /api/patients/5/records
         [HttpPost("patients/{patientId:int}/records")]
+        [Authorize(Roles = "Admin")]
         [Consumes("application/json")]
         [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -68,6 +69,7 @@ namespace ExpedienteAPI.Controllers
 
         // PUT: /api/records/5
         [HttpPut("records/{medicalRecordId:int}")]
+        [Authorize(Roles = "Admin")]
         [Consumes("application/json")]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -91,6 +93,7 @@ namespace ExpedienteAPI.Controllers
 
         // DELETE: /api/records/5
         [HttpDelete("records/{medicalRecordId:int}")]
+        [Authorize(Roles = "Admin")]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Delete([FromRoute] int medicalRecordId)

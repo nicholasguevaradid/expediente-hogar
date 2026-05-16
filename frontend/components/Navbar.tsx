@@ -24,6 +24,11 @@ export default function Navbar() {
             <a href="/expedientes" className="text-sm text-gray-600 hover:text-blue-700 font-medium">
               Expedientes
             </a>
+            {user.role === 'Admin' && (
+              <a href="/usuarios" className="text-sm text-gray-600 hover:text-blue-700 font-medium">
+                Usuarios
+              </a>
+            )}
             <span className="text-sm text-gray-400 hidden sm:inline">
               {user.username}
               {user.role !== 'Viewer' && (

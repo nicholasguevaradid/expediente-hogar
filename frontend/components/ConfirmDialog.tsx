@@ -1,7 +1,9 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 interface Props {
-  message: string;
+  message: ReactNode;
   onConfirm: () => void;
   onCancel: () => void;
   confirmLabel?: string;
@@ -12,13 +14,13 @@ export default function ConfirmDialog({ message, onConfirm, onCancel, confirmLab
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4 space-y-4">
-        <p className="text-gray-800 font-medium">{message}</p>
+        <div className="text-gray-800 font-medium">{message}</div>
         <div className="flex gap-3 justify-end">
           <button onClick={onCancel} disabled={loading} className="btn-secondary">
             Cancelar
           </button>
           <button onClick={onConfirm} disabled={loading} className="btn-danger">
-            {loading ? 'Eliminando...' : confirmLabel}
+            {loading ? '…' : confirmLabel}
           </button>
         </div>
       </div>

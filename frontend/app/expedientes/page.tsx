@@ -12,12 +12,14 @@ import Toast from '@/components/Toast';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import Pagination from '@/components/Pagination';
 import { useToast } from '@/hooks/useToast';
+import { useIsAdmin } from '@/hooks/useRole';
 
 const PAGE_SIZE = 20;
 
 function ExpedientesContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
+  const router  = useRouter();
+  const isAdmin = useIsAdmin();
   const { toasts, addToast, dismiss } = useToast();
 
   const search = searchParams.get('search') ?? '';
@@ -95,7 +97,9 @@ function ExpedientesContent() {
               </p>
             )}
           </div>
-          <a href="/expedientes/nuevo" className="btn-primary">+ Nuevo expediente</a>
+          {isAdmin && (
+            <a href="/expedientes/nuevo" className="btn-primary">+ Nuevo expediente</a>
+          )}
         </div>
 
         <form onSubmit={applyFilters} className="card flex flex-col sm:flex-row gap-3">

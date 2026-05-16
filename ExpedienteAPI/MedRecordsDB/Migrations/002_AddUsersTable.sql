@@ -52,3 +52,55 @@ BEGIN
     SELECT SCOPE_IDENTITY() AS UserId;
 END
 GO
+
+-- ListUsers
+IF OBJECT_ID('dbo.ListUsers', 'P') IS NOT NULL DROP PROCEDURE dbo.ListUsers;
+GO
+CREATE PROCEDURE [dbo].[ListUsers]
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT UserId, Username, Role, IsActive, CreatedAt
+    FROM dbo.Users
+    ORDER BY CreatedAt DESC;
+END
+GO
+
+-- UpdateUser
+IF OBJECT_ID('dbo.UpdateUser', 'P') IS NOT NULL DROP PROCEDURE dbo.UpdateUser;
+GO
+CREATE PROCEDURE [dbo].[UpdateUser]
+    @UserId   INT,
+    @Role     NVARCHAR(30),
+    @IsActive BIT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF NOT EXISTS (SELECT 1 FROM dbo.Users WHERE UserId = @UserId)
+    BEGIN
+        RAISERROR('Usuario no encontrado.', 16, 1);
+        RETURN;
+    END
+    UPDATE dbo.Users SET Role = @Role, IsActive = @IsActive WHERE UserId = @UserId;
+    SELECT @@ROWCOUNT AS RowsAffected;
+END
+GO
+
+-- ChangePassword
+IF OBJECT_ID('dbo.ChangePassword', 'P') IS NOT NULL DROP PROCEDURE dbo.ChangePassword;
+GO
+CREATE PROCEDURE [dbo].[ChangePassword]
+    @UserId       INT,
+    @PasswordHash NVARCHAR(256)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF NOT EXISTS (SELECT 1 FROM dbo.Users WHERE UserId = @UserId)
+    BEGIN
+        RAISERROR('Usuario no encontrado.', 16, 1);
+        RETURN;
+    END
+    UPDATE dbo.Users SET PasswordHash = @PasswordHash WHERE UserId = @UserId;
+    SELECT @@ROWCOUNT AS RowsAffected;
+END
+GO

@@ -24,6 +24,14 @@ namespace RepoDapper
             );
         }
 
+        public async Task<IEnumerable<UserListItem>> ListUsers()
+        {
+            return await _sqlconnection.QueryAsync<UserListItem>(
+                "dbo.ListUsers",
+                commandType: CommandType.StoredProcedure
+            );
+        }
+
         public async Task<int> CreateUser(string username, string passwordHash, string role = "Viewer")
         {
             var result = await _sqlconnection.ExecuteScalarAsync<decimal>(
@@ -32,6 +40,24 @@ namespace RepoDapper
                 commandType: CommandType.StoredProcedure
             );
             return (int)result;
+        }
+
+        public async Task<int> UpdateUser(int userId, string role, bool isActive)
+        {
+            return await _sqlconnection.ExecuteScalarAsync<int>(
+                "dbo.UpdateUser",
+                new { UserId = userId, Role = role, IsActive = isActive },
+                commandType: CommandType.StoredProcedure
+            );
+        }
+
+        public async Task<int> ChangePassword(int userId, string passwordHash)
+        {
+            return await _sqlconnection.ExecuteScalarAsync<int>(
+                "dbo.ChangePassword",
+                new { UserId = userId, PasswordHash = passwordHash },
+                commandType: CommandType.StoredProcedure
+            );
         }
     }
 }

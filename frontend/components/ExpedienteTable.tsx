@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import type { PatientResponse } from '@/types/expediente';
 import StatusBadge from './StatusBadge';
+import { useIsAdmin } from '@/hooks/useRole';
 
 interface Props {
   expedientes: PatientResponse[];
@@ -11,7 +12,8 @@ interface Props {
 }
 
 export default function ExpedienteTable({ expedientes, onDelete, deleting }: Props) {
-  const router = useRouter();
+  const router  = useRouter();
+  const isAdmin = useIsAdmin();
 
   if (expedientes.length === 0) {
     return (
@@ -61,13 +63,15 @@ export default function ExpedienteTable({ expedientes, onDelete, deleting }: Pro
                   >
                     Ver
                   </button>
-                  <button
-                    onClick={() => router.push(`/expedientes/${exp.patientId}/editar`)}
-                    className="text-amber-600 hover:underline text-xs font-medium"
-                  >
-                    Editar
-                  </button>
-                  {onDelete && (
+                  {isAdmin && (
+                    <button
+                      onClick={() => router.push(`/expedientes/${exp.patientId}/editar`)}
+                      className="text-amber-600 hover:underline text-xs font-medium"
+                    >
+                      Editar
+                    </button>
+                  )}
+                  {isAdmin && onDelete && (
                     <button
                       onClick={() => onDelete(exp.patientId)}
                       disabled={deleting === exp.patientId}
