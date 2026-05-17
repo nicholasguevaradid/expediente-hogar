@@ -12,6 +12,7 @@ interface AuthUser {
 interface AuthContextValue {
   user: AuthUser | null;
   login: (username: string, password: string) => Promise<void>;
+  register: (username: string, password: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -66,13 +67,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(authUser);
   }, []);
 
+  const register = useCallback(async (username: string, password: string) => {
+    const base = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5192';
+    const res  = await fetch(`${base}/api/auth/register`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ username, password }),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ message: 'Error al registrarse.' }));
+      throw new Error(body.message ?? `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const authUser: AuthUser = {
+      username:  data.username,
+      role:      data.role,
+      token:     data.token,
+      expiresAt: data.expiresAt,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(authUser));
+    setUser(authUser);
+  }, []);
+
   const logout = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
     setUser(null);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

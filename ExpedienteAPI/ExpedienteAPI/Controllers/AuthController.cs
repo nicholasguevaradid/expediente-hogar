@@ -23,6 +23,36 @@ namespace ExpedienteAPI.Controllers
             _config = config;
         }
 
+        // POST /api/auth/register
+        [HttpPost("register")]
+        [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        {
+            if (!ModelState.IsValid) return ValidationProblem(ModelState);
+
+            try
+            {
+                var hash  = BCrypt.Net.BCrypt.HashPassword(request.Password);
+                var newId = await _userDapper.CreateUser(request.Username, hash, "Viewer");
+
+                var user = new UserRecord
+                {
+                    UserId       = newId,
+                    Username     = request.Username,
+                    PasswordHash = hash,
+                    Role         = "Viewer",
+                    IsActive     = true,
+                };
+                var token = BuildToken(user);
+                return CreatedAtAction(nameof(Login), token);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiError(400, ex.Message));
+            }
+        }
+
         // POST /api/auth/login
         [HttpPost("login")]
         [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]

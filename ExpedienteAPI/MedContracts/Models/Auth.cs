@@ -38,6 +38,15 @@ namespace MedContracts.Models
         public DateTime CreatedAt { get; set; }
     }
 
+    public class RegisterRequest
+    {
+        [Required, StringLength(60)]
+        public string Username { get; set; } = string.Empty;
+
+        [Required, MinLength(8)]
+        public string Password { get; set; } = string.Empty;
+    }
+
     public class CreateUserRequest
     {
         [Required, StringLength(60)]
