@@ -31,15 +31,6 @@ namespace ExpedienteAPI.Controllers
             return Ok(record);
         }
 
-        // GET: /api/patients/5/records
-        [HttpGet("patients/{patientId:int}/records")]
-        [ProducesResponseType(typeof(IEnumerable<MedicalRecordResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<MedicalRecordResponse>>> ListByPatient([FromRoute] int patientId)
-        {
-            var records = await _recordFlujo.ListMedicalRecordsByPatient(patientId);
-            return Ok(records);
-        }
-
         // POST: /api/patients/5/records
         [HttpPost("patients/{patientId:int}/records")]
         [Authorize(Roles = "Admin")]
