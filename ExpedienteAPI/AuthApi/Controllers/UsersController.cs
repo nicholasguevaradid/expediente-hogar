@@ -3,7 +3,7 @@ using MedContracts.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ExpedienteAPI.Controllers
+namespace AuthApi.Controllers
 {
     [ApiController]
     [Route("api/users")]

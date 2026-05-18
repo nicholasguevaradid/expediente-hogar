@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(async (username: string, password: string) => {
-    const base = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5192';
+    const base = process.env.NEXT_PUBLIC_AUTH_API_URL ?? 'http://localhost:5100';
     const res  = await fetch(`${base}/api/auth/login`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const register = useCallback(async (username: string, password: string) => {
-    const base = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5192';
+    const base = process.env.NEXT_PUBLIC_AUTH_API_URL ?? 'http://localhost:5100';
     const res  = await fetch(`${base}/api/auth/register`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="AuthApi/AuthApi.csproj" />
   <Project Path="ExpedienteAPI/ExpedienteAPI.csproj" />
   <Project Path="MedContracts/MedContracts.csproj" />
   <Project Path="MedRecordFlujo/MedRecordFlujo.csproj" />

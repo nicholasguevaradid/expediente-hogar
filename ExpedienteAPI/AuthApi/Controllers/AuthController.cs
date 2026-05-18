@@ -6,7 +6,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace ExpedienteAPI.Controllers
+namespace AuthApi.Controllers
 {
     [ApiController]
     [Route("api/auth")]
@@ -41,7 +41,7 @@ namespace ExpedienteAPI.Controllers
                     UserId       = newId,
                     Username     = request.Username,
                     PasswordHash = hash,
-                    Role         = "Viewer",
+                    Role         = "Profesional",
                     IsActive     = true,
                 };
                 var token = BuildToken(user);
