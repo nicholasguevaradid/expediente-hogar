@@ -10,8 +10,8 @@ import ErrorMessage from '@/components/ErrorMessage';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import Toast from '@/components/Toast';
 import { useToast } from '@/hooks/useToast';
-import { useIsAdmin } from '@/hooks/useRole';
-import { exportPdf } from '@/services/export';
+import { useIsAdmin, useCanManageRecords } from '@/hooks/useRole';
+import { exportPdf, exportRecordPdf, exportRecordExcel } from '@/services/export';
 
 function Field({ label, value }: { label: string; value?: string | null }) {
   if (!value) return null;
@@ -28,19 +28,46 @@ interface RecordCardProps {
   patientId: string;
   onDelete: (id: number) => void;
   deleting: boolean;
-  isAdmin: boolean;
+  canManageRecords: boolean;
 }
 
-function RecordCard({ rec, patientId, onDelete, deleting, isAdmin }: RecordCardProps) {
+function RecordCard({ rec, patientId, onDelete, deleting, canManageRecords }: RecordCardProps) {
+  const [exportingPdf, setExportingPdf]     = useState(false);
+  const [exportingExcel, setExportingExcel] = useState(false);
+
   return (
     <div className="card space-y-3">
-      <div className="flex justify-between items-start">
+      <div className="flex justify-between items-start flex-wrap gap-2">
         <p className="font-medium text-sm text-blue-700">
           Visita: {rec.visitDate?.split('T')[0]}
         </p>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <span className="text-xs text-gray-400">#{rec.medicalRecordId}</span>
-          {isAdmin && (
+          <button
+            onClick={async () => {
+              setExportingPdf(true);
+              try { await exportRecordPdf(rec.medicalRecordId, rec.visitDate); }
+              catch { /* toast handled by parent */ }
+              finally { setExportingPdf(false); }
+            }}
+            disabled={exportingPdf}
+            className="text-blue-600 hover:underline text-xs font-medium disabled:opacity-40"
+          >
+            {exportingPdf ? '...' : 'PDF'}
+          </button>
+          <button
+            onClick={async () => {
+              setExportingExcel(true);
+              try { await exportRecordExcel(rec.medicalRecordId, rec.visitDate); }
+              catch { /* toast handled by parent */ }
+              finally { setExportingExcel(false); }
+            }}
+            disabled={exportingExcel}
+            className="text-green-700 hover:underline text-xs font-medium disabled:opacity-40"
+          >
+            {exportingExcel ? '...' : 'Excel'}
+          </button>
+          {canManageRecords && (
             <>
               <a
                 href={`/expedientes/${patientId}/registros/${rec.medicalRecordId}/editar`}
@@ -80,8 +107,9 @@ function RecordCard({ rec, patientId, onDelete, deleting, isAdmin }: RecordCardP
 
 export default function DetalleExpedientePage() {
   const { id } = useParams<{ id: string }>();
-  const router     = useRouter();
-  const isAdmin    = useIsAdmin();
+  const router            = useRouter();
+  const isAdmin           = useIsAdmin();
+  const canManageRecords  = useCanManageRecords();
   const [exporting, setExporting] = useState(false);
   const { toasts, addToast, dismiss } = useToast();
 
@@ -226,7 +254,7 @@ export default function DetalleExpedientePage() {
             <h2 className="text-lg font-semibold text-gray-900">
               Registros médicos ({records.length})
             </h2>
-            {isAdmin && (
+            {canManageRecords && (
               <a href={`/expedientes/${id}/registros/nuevo`} className="btn-primary text-sm">
                 + Agregar registro
               </a>
@@ -245,7 +273,7 @@ export default function DetalleExpedientePage() {
                   patientId={id}
                   onDelete={setConfirmRecordId}
                   deleting={deletingRecord && confirmRecordId === rec.medicalRecordId}
-                  isAdmin={isAdmin}
+                  canManageRecords={canManageRecords}
                 />
               ))}
             </div>

@@ -56,7 +56,7 @@ namespace MedContracts.Models
         public string Password { get; set; } = string.Empty;
 
         [StringLength(30)]
-        public string Role { get; set; } = "Viewer";
+        public string Role { get; set; } = "Profesional";
     }
 
     public class UpdateUserRequest

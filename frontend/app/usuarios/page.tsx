@@ -10,7 +10,7 @@ import Toast from '@/components/Toast';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { useToast } from '@/hooks/useToast';
 
-const ROLES = ['Admin', 'Viewer'] as const;
+const ROLES = ['Admin', 'Profesional'] as const;
 
 function RoleBadge({ role }: { role: string }) {
   const cls = role === 'Admin'
@@ -103,7 +103,7 @@ export default function UsuariosPage() {
   const [showCreate, setShowCreate]   = useState(false);
   const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [newRole, setNewRole]         = useState<'Admin' | 'Viewer'>('Viewer');
+  const [newRole, setNewRole]         = useState<'Admin' | 'Profesional'>('Profesional');
   const [creating, setCreating]       = useState(false);
 
   useEffect(() => {
@@ -161,7 +161,7 @@ export default function UsuariosPage() {
       setShowCreate(false);
       setNewUsername('');
       setNewPassword('');
-      setNewRole('Viewer');
+      setNewRole('Profesional');
       load();
     } catch (err) {
       addToast(err instanceof Error ? err.message : 'Error al crear usuario.', 'error');
@@ -211,7 +211,7 @@ export default function UsuariosPage() {
                 <label className="label">Rol</label>
                 <select
                   value={newRole}
-                  onChange={(e) => setNewRole(e.target.value as 'Admin' | 'Viewer')}
+                  onChange={(e) => setNewRole(e.target.value as 'Admin' | 'Profesional')}
                   className="input-field w-full"
                 >
                   {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}

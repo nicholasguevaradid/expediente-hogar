@@ -6,7 +6,7 @@ namespace MedContracts.Control_Interface.RepoDapper
     {
         Task<UserRecord?> GetByUsername(string username);
         Task<IEnumerable<UserListItem>> ListUsers();
-        Task<int> CreateUser(string username, string passwordHash, string role = "Viewer");
+        Task<int> CreateUser(string username, string passwordHash, string role = "Profesional");
         Task<int> UpdateUser(int userId, string role, bool isActive);
         Task<int> ChangePassword(int userId, string passwordHash);
     }

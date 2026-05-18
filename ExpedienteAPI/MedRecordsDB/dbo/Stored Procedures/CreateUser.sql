@@ -1,7 +1,7 @@
 CREATE PROCEDURE [dbo].[CreateUser]
     @Username     NVARCHAR(60),
     @PasswordHash NVARCHAR(256),
-    @Role         NVARCHAR(30) = 'Viewer'
+    @Role         NVARCHAR(30) = 'Profesional'
 AS
 BEGIN
     SET NOCOUNT ON;

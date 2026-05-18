@@ -31,7 +31,7 @@ export default function Navbar() {
             )}
             <span className="text-sm text-gray-400 hidden sm:inline">
               {user.username}
-              {user.role !== 'Viewer' && (
+              {user.role && (
                 <span className="ml-1 text-xs text-blue-600 font-medium">({user.role})</span>
               )}
             </span>

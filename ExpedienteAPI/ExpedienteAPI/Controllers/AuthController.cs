@@ -34,7 +34,7 @@ namespace ExpedienteAPI.Controllers
             try
             {
                 var hash  = BCrypt.Net.BCrypt.HashPassword(request.Password);
-                var newId = await _userDapper.CreateUser(request.Username, hash, "Viewer");
+                var newId = await _userDapper.CreateUser(request.Username, hash, "Profesional");
 
                 var user = new UserRecord
                 {

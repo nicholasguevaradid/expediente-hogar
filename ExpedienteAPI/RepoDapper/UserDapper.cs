@@ -32,7 +32,7 @@ namespace RepoDapper
             );
         }
 
-        public async Task<int> CreateUser(string username, string passwordHash, string role = "Viewer")
+        public async Task<int> CreateUser(string username, string passwordHash, string role = "Profesional")
         {
             var result = await _sqlconnection.ExecuteScalarAsync<decimal>(
                 "dbo.CreateUser",

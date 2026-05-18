@@ -17,10 +17,12 @@ namespace ExpedienteAPI.Controllers
     public class ExportController : ControllerBase
     {
         private readonly IPatientFlujo _patientFlujo;
+        private readonly IRecordFlujo  _recordFlujo;
 
-        public ExportController(IPatientFlujo patientFlujo)
+        public ExportController(IPatientFlujo patientFlujo, IRecordFlujo recordFlujo)
         {
             _patientFlujo = patientFlujo;
+            _recordFlujo  = recordFlujo;
         }
 
         // GET /api/patients/{id}/export/pdf
@@ -47,6 +49,43 @@ namespace ExpedienteAPI.Controllers
             var patients = await _patientFlujo.ExportPatients(search, estado);
             var excel    = BuildExcel(patients);
             return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "expedientes.xlsx");
+        }
+
+        // GET /api/records/{recordId}/export/pdf
+        [HttpGet("records/{recordId:int}/export/pdf")]
+        [Produces("application/pdf")]
+        public async Task<IActionResult> ExportRecordPdf([FromRoute] int recordId)
+        {
+            var record = await _recordFlujo.GetMedicalRecordById(recordId);
+            if (record is null)
+                return NotFound(new { message = "Registro médico no encontrado.", status = 404, timestamp = DateTime.UtcNow });
+
+            var patient = await _patientFlujo.GetPatientById(record.PatientId);
+            if (patient is null)
+                return NotFound(new { message = "Paciente no encontrado.", status = 404, timestamp = DateTime.UtcNow });
+
+            var data = new PatientWithRecordsResponse { Patient = patient, Records = new[] { record } };
+            var pdf  = BuildPdf(data);
+            var date = record.VisitDate?.ToString("yyyyMMdd") ?? "sin-fecha";
+            return File(pdf, "application/pdf", $"registro-{recordId}-{date}.pdf");
+        }
+
+        // GET /api/records/{recordId}/export/excel
+        [HttpGet("records/{recordId:int}/export/excel")]
+        [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+        public async Task<IActionResult> ExportRecordExcel([FromRoute] int recordId)
+        {
+            var record = await _recordFlujo.GetMedicalRecordById(recordId);
+            if (record is null)
+                return NotFound(new { message = "Registro médico no encontrado.", status = 404, timestamp = DateTime.UtcNow });
+
+            var patient = await _patientFlujo.GetPatientById(record.PatientId);
+            if (patient is null)
+                return NotFound(new { message = "Paciente no encontrado.", status = 404, timestamp = DateTime.UtcNow });
+
+            var excel = BuildRecordExcel(patient, record);
+            var date  = record.VisitDate?.ToString("yyyyMMdd") ?? "sin-fecha";
+            return File(excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"registro-{recordId}-{date}.xlsx");
         }
 
         // ── PDF ────────────────────────────────────────────────────────────────
@@ -260,6 +299,74 @@ namespace ExpedienteAPI.Controllers
 
             ws.Columns().AdjustToContents();
             ws.SheetView.FreezeRows(1);
+
+            using var stream = new MemoryStream();
+            wb.SaveAs(stream);
+            return stream.ToArray();
+        }
+
+        private static byte[] BuildRecordExcel(PatientResponse p, MedicalRecordResponse rec)
+        {
+            using var wb = new XLWorkbook();
+            var ws = wb.Worksheets.Add("Registro Médico");
+
+            void Header(IXLCell cell, string text)
+            {
+                cell.Value = text;
+                cell.Style.Font.Bold = true;
+                cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#1d4ed8");
+                cell.Style.Font.FontColor = XLColor.White;
+            }
+
+            // Patient section
+            ws.Cell(1, 1).Value = "DATOS DEL PACIENTE";
+            ws.Cell(1, 1).Style.Font.Bold = true;
+            ws.Cell(1, 1).Style.Fill.BackgroundColor = XLColor.FromHtml("#eff6ff");
+
+            string[,] patientFields =
+            {
+                { "N° Expediente",       p.NumeroExpediente ?? "" },
+                { "Identificación",      p.Identificacion ?? "" },
+                { "Apellidos",           $"{p.LastName}{(p.SecLastName is not null ? " " + p.SecLastName : "")}" },
+                { "Nombre",              p.FirstName },
+                { "Fecha de nacimiento", p.Birth_Date.HasValue ? p.Birth_Date.Value.ToString("dd/MM/yyyy") : "" },
+                { "Género",              p.Gender == "M" ? "Masculino" : p.Gender == "F" ? "Femenino" : (p.Gender ?? "") },
+                { "Estado",              p.Estado },
+            };
+
+            for (int i = 0; i < patientFields.GetLength(0); i++)
+            {
+                ws.Cell(i + 2, 1).Value = patientFields[i, 0];
+                ws.Cell(i + 2, 1).Style.Font.Bold = true;
+                ws.Cell(i + 2, 2).Value = patientFields[i, 1];
+            }
+
+            int recRow = patientFields.GetLength(0) + 4;
+
+            // Record section headers
+            string[] recHeaders =
+            [
+                "ID Registro", "Fecha de visita", "Diagnóstico", "Diagnóstico histórico",
+                "Alergias", "Prescripción", "Presión arterial",
+                "Temperatura (°C)", "Peso (kg)", "Altura (cm)", "Notas"
+            ];
+            for (int i = 0; i < recHeaders.Length; i++) Header(ws.Cell(recRow, i + 1), recHeaders[i]);
+
+            // Record data row
+            int dr = recRow + 1;
+            ws.Cell(dr, 1).Value  = rec.MedicalRecordId;
+            ws.Cell(dr, 2).Value  = rec.VisitDate.HasValue ? rec.VisitDate.Value.ToString("dd/MM/yyyy") : "";
+            ws.Cell(dr, 3).Value  = rec.Diagnosis ?? "";
+            ws.Cell(dr, 4).Value  = rec.Hist_Diagnosis ?? "";
+            ws.Cell(dr, 5).Value  = rec.Alergies ?? "";
+            ws.Cell(dr, 6).Value  = rec.Perscrption ?? "";
+            ws.Cell(dr, 7).Value  = rec.BloodPressure ?? "";
+            ws.Cell(dr, 8).Value  = rec.TemperatureC.HasValue ? (double)rec.TemperatureC.Value : (object)"";
+            ws.Cell(dr, 9).Value  = rec.WeightKg.HasValue     ? (double)rec.WeightKg.Value     : (object)"";
+            ws.Cell(dr, 10).Value = rec.HeightCm.HasValue     ? (double)rec.HeightCm.Value     : (object)"";
+            ws.Cell(dr, 11).Value = rec.Notes ?? "";
+
+            ws.Columns().AdjustToContents();
 
             using var stream = new MemoryStream();
             wb.SaveAs(stream);

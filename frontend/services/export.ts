@@ -44,6 +44,16 @@ export function exportPdf(patientId: number, numeroExpediente?: string | null) {
   return downloadExport(`/api/patients/${patientId}/export/pdf`, filename);
 }
 
+export function exportRecordPdf(recordId: number, visitDate?: string | null) {
+  const date = visitDate ? visitDate.split('T')[0] : recordId.toString();
+  return downloadExport(`/api/records/${recordId}/export/pdf`, `registro-${date}.pdf`);
+}
+
+export function exportRecordExcel(recordId: number, visitDate?: string | null) {
+  const date = visitDate ? visitDate.split('T')[0] : recordId.toString();
+  return downloadExport(`/api/records/${recordId}/export/excel`, `registro-${date}.xlsx`);
+}
+
 export function exportExcel(search?: string, estado?: string) {
   const params = new URLSearchParams();
   if (search) params.set('search', search);
